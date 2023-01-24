@@ -1,3 +1,12 @@
+body {
+  background-color: #f0f2f5;
+  font-family: 'Raleway', sans-serif;
+}
+
+.app {
+  margin: 90px;
+}
+
 .main-header {
   font-size: 30px;
   text-align: center;
@@ -6,21 +15,57 @@
 }
 
 .main-container {
-  margin: 60px;
   display: flex;
   justify-content: space-between;
   height: 70vh;
-  width: 80%;
+  width: 100%;
+}
+
+.generate-schedule-btn {
+  box-shadow: 0 2px 0 rgb(0 0 0 / 2%);
+  color: rgba(0,0,0,.65);
+  border: 1px solid #d9d9d9;;
+}
+
+.schedule, .pt-list {
+  box-shadow: 0 8px 10px rgb(0 0 0 / 8%);
+  background-color: #fff;
+  height: 100%
 }
 
 .schedule {
-  height: 100%;
   width: 60%;
-  border: 1px solid blue;
 }
 
 .pt-list {
-  height: 100%;
   width: 30%;
-  border: 1px solid green;
+}
+
+.list-tabs {
+  display: flex;
+  margin: 8px 0 0 8px;
+}
+
+.tab {
+  padding: 5px 2px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border: 1px solid #d9d9d9;
+  border-bottom: none;
+}
+
+.main-list li:first-child {
+  border-top: 1px solid #d9d9d9;
+}
+
+.main-list li {
+  border-bottom: 1px solid #d9d9d9;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.star {
+  margin-right: 5px;
+  color: #b7b7b7;
 }

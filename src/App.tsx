@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Schedule from './components/Schedule'
 import PatientTherapistList from './components/PatientTherapistList';
+import './reset.css'
 import './App.css';
 import { ListData, ScheduleData } from './types';
 
@@ -57,9 +58,9 @@ const App = (): JSX.Element => {
   };
   
   return (
-    <div className="App">
+    <div className="app">
       <header className='main-header'>RScheduler</header>
-      <button onClick={generateSchedule}>Generate Schedule</button>
+      <button className='generate-schedule-btn' onClick={generateSchedule}>Generate Schedule</button>
       <div className="errors">{error}</div>
 
       <div className='main-container'>
