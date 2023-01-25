@@ -1,20 +1,16 @@
+export type ValidTime = '0700' | '0745' | '0830' | '0845' | '0930' | '1015' | '1030' | '1115' | '1200' | '1300' | '1345' | '1430' | '1445' | '1530' | '1615' | '1630' | '1715';
+
 export type Appointment = {
-  time: string,
-  patient?: string | undefined,
-  therapist?: string | undefined,
+  time: ValidTime,
+  patient: string,
+  therapist: string,
 };
 
 export type Mode = 'patient' | 'therapist';
 
-export type ScheduleData = {
-  mode: Mode,
-  headers: string[],
-  appointments: Record<string, Appointment[]>,
-};
-
 export type TimeRange = {
-  startTime: string,
-  endTime: string,
+  startTime: ValidTime,
+  endTime: ValidTime,
 };
 
 export type Patient = {
@@ -28,7 +24,8 @@ export type Therapist = {
   availability: TimeRange[],
 }
 
-export type ListData = {
+export type State = {
   patients: Patient[],
   therapists: Therapist[],
-};
+  appointments: Appointment[],
+}
