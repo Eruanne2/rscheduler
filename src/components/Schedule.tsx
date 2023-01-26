@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mode, TimeRange, Appointment, State, Therapist, Patient } from "../types";
+import { Mode, TimeRange, Appointment, State, Therapist, Patient } from "../typing/types";
 import { TIME_SLOTS } from "../constants";
 
 const Schedule = (props: { scheduleState: State, generateSchedule: () => void, error: string }): JSX.Element => {
@@ -49,7 +49,7 @@ const Schedule = (props: { scheduleState: State, generateSchedule: () => void, e
       </thead>
       <tbody>
         {TIME_SLOTS.map((slot: TimeRange) => 
-          <tr key={slot.endTime}>
+          <tr key={slot.endTime} className={slot.break ? 'break' : ''}>
             <td><span className='y-labels'>{slot.startTime}</span></td>
             {names.map((name: string, idx: number) => {
               const appointment = findAppointment(name, slot)
@@ -60,6 +60,7 @@ const Schedule = (props: { scheduleState: State, generateSchedule: () => void, e
             })}
           </tr>
         )}
+        <tr><td className='last-time-label'>{TIME_SLOTS[TIME_SLOTS.length - 1].endTime}</td></tr>
       </tbody>
     </table>
   </div>;

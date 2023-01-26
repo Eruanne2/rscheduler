@@ -1,19 +1,19 @@
-import { State } from './types';
+import { State } from './typing/types';
 
 export const testState: State = {
   patients: [
-    { name: 'Pt 1', unavailability: [] },
-    { name: 'Pt 2', unavailability: [{ startTime: '1300', endTime: '1430'}] },
-    { name: 'Pt 3', unavailability: [] },
-    { name: 'Pt 4', unavailability: [] },
-    { name: 'Pt 5', unavailability: [] },
-    { name: 'Pt 6', unavailability: [] },
+    { name: 'Pt 1', availability: [{ startTime: '0700', endTime: '1715'}] },
+    { name: 'Pt 2', availability: [{ startTime: '0700', endTime: '1300'}, { startTime: '1430', endTime: '1715'}] },
+    { name: 'Pt 3', availability: [{ startTime: '0700', endTime: '1715'}] },
+    { name: 'Pt 4', availability: [{ startTime: '0700', endTime: '1715'}] },
+    { name: 'Pt 5', availability: [{ startTime: '0700', endTime: '1715'}] },
+    { name: 'Pt 6', availability: [{ startTime: '0700', endTime: '1715'}] },
   ],
   therapists: [
     { name: 'Brian', primary: true, availability: [{ startTime: '0700', endTime: '1530'}]},
     { name: 'Shay', primary: false, availability: [{ startTime: '0930', endTime: '1715'}]},
     { name: 'Raul', primary: false, availability: [{ startTime: '0930', endTime: '1715'}]},
-    { name: 'Ari', primary: true, availability: [{ startTime: '0700', endTime: '1530'}]},
+    { name: 'Ari', primary: true, availability: []},
   ],
   appointments: [
     { therapist: 'Brian', time: '0700', patient: 'Pt 1' },
@@ -28,5 +28,3 @@ export const testState: State = {
     { therapist: 'Raul', time: '1115', patient: 'Pt 3' },
   ]
 };
-
-export const testError = 'ATTN: Not enough coverage. Find patients to group.'

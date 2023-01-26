@@ -100,14 +100,11 @@ input[type=radio] {
   justify-content: space-between;
 }
 
-.selected-li {
-  height: 150px;
-}
-
 .star {
   margin-left: 5px;
   color: #b7b7b7;
   font-size: 18px;
+  display: inline;
 }
 
 .hidden {
@@ -118,11 +115,42 @@ input[type=radio] {
   margin-top: 15px;
 }
 
+.list-item-icons {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  color: #b7b7b7;
+}
+
+.list-item-icons span {
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.time-select {
+  width: 100px;
+}
+
+.add-new-availability {
+  font-size: 16px;
+  font-style: italic;
+}
+
 .schedule table {
   margin: 20px;
   width: calc(100% - 40px);
   table-layout: fixed;
   border-collapse: collapse;
+}
+
+.schedule tbody {
+  position: relative;
+}
+
+.schedule .last-time-label {
+  position: absolute;
+  left: 0;
+  bottom: 10px;
 }
 
 .schedule td:first-child, .schedule th:first-child {
@@ -149,6 +177,10 @@ input[type=radio] {
   width: 100%;
   position: absolute;
   top: -10px;
+}
+
+.schedule tr.break td:not(:first-child) {
+  background-color: #b7b7b7;
 }
 
 .break, .unavailable {

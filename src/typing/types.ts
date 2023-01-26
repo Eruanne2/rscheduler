@@ -11,11 +11,12 @@ export type Mode = 'patient' | 'therapist';
 export type TimeRange = {
   startTime: ValidTime,
   endTime: ValidTime,
+  break?: boolean,
 };
 
 export type Patient = {
   name: string,
-  unavailability: TimeRange[],
+  availability: TimeRange[],
 };
 
 export type Therapist = {
