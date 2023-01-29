@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { Mode, TimeRange, Appointment, State, Therapist, Patient } from "../typing/types";
+import { Mode, TimeRange, Appointment, State, Person } from "../typing/types";
 import { TIME_SLOTS } from "../constants";
+import { calcHeight, hasAvailable } from "../helpers/timeHelpers";
 
 const Schedule = (props: { scheduleState: State, generateSchedule: () => void, error: string }): JSX.Element => {
   const { scheduleState, generateSchedule, error } = props;
   const [scheduleMode, setScheduleMode] = useState<Mode>('therapist');
-  const names = scheduleState[`${scheduleMode}s`].map((person: Therapist | Patient) => person.name)
+  const persons = scheduleState[`${scheduleMode}s`];
 
-  const handleModeChange = (newMode: Mode) => setScheduleMode(newMode);
-  const findAppointment = (name: string, slot: TimeRange): Appointment | undefined =>
-    scheduleState.appointments.find((appt: Appointment) => appt.time === slot.startTime && appt[scheduleMode] === name);
+  const handleModeChange = (newMode: Mode): void => setScheduleMode(newMode);
+  const findAppointment = (person: Person, slot: TimeRange): Appointment | undefined =>
+    scheduleState.appointments.find((appt: Appointment) => appt.time === slot.startTime && appt[scheduleMode] === person.name);
 
   return <div className="schedule">
     <div className='schedule-header'>
@@ -42,21 +43,21 @@ const Schedule = (props: { scheduleState: State, generateSchedule: () => void, e
       <thead>
         <tr className='table-header-row'>
           <th/>
-          {names.map((name: string, idx: number) => 
-            <th key={name} className={`col-${idx}}`}>{name}</th>
+          {persons.map((person: Person, idx: number) => 
+            <th key={person.name} className={`col-${idx}}`}>{person.name}</th>
           )}
         </tr>
       </thead>
       <tbody>
-        {TIME_SLOTS.map((slot: TimeRange) => 
-          <tr key={slot.endTime} className={slot.break ? 'break' : ''}>
+        {TIME_SLOTS.map((slot: TimeRange, idx: number) => 
+          <tr key={slot.endTime} className={slot.break ? 'block-off' : ''} style={{ height: `${calcHeight(slot)}%` }}>
             <td><span className='y-labels'>{slot.startTime}</span></td>
-            {names.map((name: string, idx: number) => {
-              const appointment = findAppointment(name, slot)
+            {persons.map((person: Person, idx: number) => {
+              const appointment = findAppointment(person, slot)
               let text;
               if (scheduleMode === 'therapist') text = appointment ? appointment.patient : '';
               else text = appointment ? appointment.therapist : '';
-              return <td key={name} className={`col-${idx}`}>{text}</td>
+              return <td key={person.name} className={`col-${idx} ${hasAvailable(person, slot) ? '' : 'block-off'}`}>{text}</td>
             })}
           </tr>
         )}

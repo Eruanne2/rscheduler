@@ -1,12 +1,12 @@
 import React, { Dispatch, SetStateAction, useState } from "react";
-import { Patient, Therapist, TimeRange, State } from "../typing/types";
+import { Patient, Therapist, Person, TimeRange, State } from "../typing/types";
 import TimeSelect from "./TimeSelect";
 import { checkIsTherapist, checkIsValidTime } from '../typing/typeGuards'
 import { Tooltip } from "react-tooltip";
 import 'react-tooltip/dist/react-tooltip.css'
 
 const ListItem = (props: { 
-  person: Patient | Therapist,
+  person: Person,
   selectedPerson: string,
   setSelectedPerson: Dispatch<SetStateAction<string>>,
   listState: State,
@@ -16,7 +16,7 @@ const ListItem = (props: {
   const isTherapist = checkIsTherapist(person);
   const isSelected = selectedPerson === person.name;
   const [editing, setEditing] = useState(false);
-  const [personState, setPersonState] = useState<Patient | Therapist>({...person});
+  const [personState, setPersonState] = useState<Person>({...person});
   const [editingErrors, setEditingErrors] = useState<string>('');
 
   const toggleDropdown = () => {
@@ -69,7 +69,7 @@ const ListItem = (props: {
   };
   const deletePerson = () => {
     const newListState = { ...listState };
-    newListState[isTherapist ? 'therapists' : 'patients'].filter((pers: Therapist | Patient) => pers.name === person.name);
+    newListState[isTherapist ? 'therapists' : 'patients'].filter((pers: Person) => pers.name === person.name);
   };
 
   const icon = (iconType: string, tooltipText: string, clickHandler: () => void) => {

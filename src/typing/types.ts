@@ -25,6 +25,8 @@ export type Therapist = {
   availability: TimeRange[],
 }
 
+export type Person = Patient | Therapist;
+
 export type State = {
   patients: Patient[],
   therapists: Therapist[],

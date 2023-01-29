@@ -6,23 +6,23 @@ import './App.css';
 import { testState } from './testData';
 import { State } from './typing/types';
 
+const deepCopyState = (state: State) => JSON.parse(JSON.stringify(state)) as State;
+
 const App = (): JSX.Element => {
-  const [scheduleState, setScheduleState] = useState(JSON.parse(JSON.stringify(testState)) as State);
-  const [listState, setListState] = useState(JSON.parse(JSON.stringify(testState)) as State);
+  const [scheduleState, setScheduleState] = useState<State>(deepCopyState(testState));
+  const [listState, setListState] = useState<State>(deepCopyState(testState));
   const [scheduleError, setScheduleError] = useState<string>('');
 
   useEffect(() => {
-    // const ts = testState; // why is testState getting updated???
-    // debugger
     if (JSON.stringify(listState) !== JSON.stringify(scheduleState)) {
       setScheduleError('A patient or therapist has been edited. Please regenerate schedule.');
     }
   }, [scheduleState, listState])
 
-  const generateSchedule = () => {
-    console.log('generate schedule here');
-    // also update scheduleState to match listState
-  };
+  const generateSchedule = () => setScheduleState(deepCopyState(listState)); // this triggers the useEffect below
+  useEffect(() => {
+    // generate schedule here
+  }, [scheduleState]);
   
   return (
     <div className="app">

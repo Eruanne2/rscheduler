@@ -1,6 +1,6 @@
-import { Patient, Therapist, ValidTime } from './types';
+import { Person, Therapist, ValidTime } from './types';
 
-export const checkIsTherapist = (person: Patient | Therapist): person is Therapist => {
+export const checkIsTherapist = (person: Person): person is Therapist => {
   return (person as Therapist).primary !== undefined;
 };
 

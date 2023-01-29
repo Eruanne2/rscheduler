@@ -28,7 +28,7 @@ body {
 
 .schedule {
   width: 60%;
-  height: 100%;
+  height: 740px;
 }
 
 .schedule-header {
@@ -145,6 +145,7 @@ input[type=radio] {
 
 .schedule tbody {
   position: relative;
+  height: 600px;
 }
 
 .schedule .last-time-label {
@@ -168,29 +169,14 @@ input[type=radio] {
 
 .schedule td:not(:first-child) {
   vertical-align: middle;
-  height: 35px;
   border: 1px solid #d9d9d9;
 }
 
 .schedule .y-labels {
-  height: 100%;
-  width: 100%;
   position: absolute;
   top: -10px;
 }
 
-.schedule tr.break td:not(:first-child) {
+.schedule tr.block-off td:not(:first-child), .schedule td.block-off {
   background-color: #b7b7b7;
-}
-
-.break, .unavailable {
-
-}
-
-.short-break {
-
-}
-
-.lunch-break {
-
 }

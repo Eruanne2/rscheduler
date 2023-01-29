@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { State, Patient, Therapist } from "../typing/types";
+import { State, Person } from "../typing/types";
 import ListItem from "./ListItem";
 
 const PatientTherapistList = (props: { listState: State, setListState: Dispatch<SetStateAction<State>>}): JSX.Element => {
@@ -17,7 +17,7 @@ const PatientTherapistList = (props: { listState: State, setListState: Dispatch<
       <li className="tab" onClick={() => setSelectedTab('patients')}>Patients</li>
     </ul>
     <ul className='main-list'>
-      {listState[selectedTab].map((person: Patient | Therapist) => 
+      {listState[selectedTab].map((person: Person) => 
         <ListItem
         key={person.name}
           person={person}
