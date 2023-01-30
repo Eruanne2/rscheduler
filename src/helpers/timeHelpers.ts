@@ -1,5 +1,5 @@
 import { TIME_SLOTS } from '../constants';
-import { TimeRange, Person } from '../typing/types';
+import { TimeRange, Person, ValidTime } from '../typing/types';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import isBetween from 'dayjs/plugin/isBetween';
@@ -22,4 +22,12 @@ export const hasAvailable = (person: Person, slot: TimeRange): boolean => {
     dayjs(slot.startTime, 'HHmm').isBetween(dayjs(avb.startTime, 'HHmm'), dayjs(avb.endTime, 'HHmm'), 'minute', '[]')
       && dayjs(slot.endTime, 'HHmm').isBetween(dayjs(avb.startTime, 'HHmm'), dayjs(avb.endTime, 'HHmm'), 'minute', '[]')
   ));
+};
+
+export const isBefore = (timeA: ValidTime, timeB: ValidTime) => {
+  return dayjs(timeA, 'HHmm').isBefore(dayjs(timeB, 'HHmm'));
+};
+
+export const isAfter = (timeA: ValidTime, timeB: ValidTime) => {
+  return dayjs(timeA, 'HHmm').isAfter(dayjs(timeB, 'HHmm'));
 };

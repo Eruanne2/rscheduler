@@ -1,27 +1,32 @@
+import dayjs from "dayjs";
 import React from "react";
 import { TIME_SLOTS } from "../constants";
 import { TimeRange, ValidTime } from "../typing/types";
+import { isBefore, isAfter } from '../helpers/timeHelpers';
 
 const TimeSelect = (props: {
   startTime: boolean,
-  defaultVal: ValidTime | '',
   disabled: boolean,
   idx: number,
+  availabilityState: TimeRange,
   changeAvailability: (e: React.ChangeEvent<HTMLSelectElement>, idx: number, startTime: boolean) => void,
 }) => {
-  const { startTime, defaultVal, disabled, idx, changeAvailability } = props;
-  const emptyVal = '';
+  const { startTime, disabled, idx, availabilityState, changeAvailability } = props;
+  const value = startTime ? availabilityState.startTime : availabilityState.endTime;
+  const timeOptions = TIME_SLOTS
+    .map((slot: TimeRange) => startTime ? slot.startTime : slot.endTime)
+    .filter((time: ValidTime) => {
+      return (startTime) ? isBefore(time, availabilityState.endTime) : isAfter(time, availabilityState.startTime)
+    });
+
   return <select
     className={`time-select ${startTime ? 'start' : 'end'}`}
     disabled={disabled}
-    defaultValue={defaultVal}
+    value={value}
     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => changeAvailability(e, idx, startTime)}
   >
-    <option value={emptyVal} disabled hidden>--Please select--</option>
-    {TIME_SLOTS.map((ts: TimeRange) => {
-      const val = startTime ? ts.startTime : ts.endTime;
-      return <option key={val} value={val}>{val}</option>
-    })}
+    <option value={''} disabled hidden>--Please select--</option>
+    {timeOptions.map((time: ValidTime) => <option key={time} value={time}>{time}</option>)}
   </select>;
 };
 

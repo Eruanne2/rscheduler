@@ -2,6 +2,7 @@ import React, { Dispatch, SetStateAction, useState } from "react";
 import { Patient, Therapist, Person, TimeRange, State } from "../typing/types";
 import TimeSelect from "./TimeSelect";
 import { checkIsTherapist, checkIsValidTime } from '../typing/typeGuards'
+import { deepCopyState, deepCopyPerson } from '../helpers/deepCopy';
 import { Tooltip } from "react-tooltip";
 import 'react-tooltip/dist/react-tooltip.css'
 
@@ -13,14 +14,18 @@ const ListItem = (props: {
   setListState: Dispatch<SetStateAction<State>>,
 }): JSX.Element => {
   const { person, selectedPerson, setSelectedPerson, listState, setListState } = props;
-  const isTherapist = checkIsTherapist(person);
-  const isSelected = selectedPerson === person.name;
   const [editing, setEditing] = useState(false);
-  const [personState, setPersonState] = useState<Person>({...person});
+  const [personState, setPersonState] = useState<Person>(deepCopyPerson(person));
   const [editingErrors, setEditingErrors] = useState<string>('');
 
+  const isTherapist = checkIsTherapist(person) && checkIsTherapist(personState);
+  const isSelected = selectedPerson === person.name;
+
   const toggleDropdown = () => {
-    if (isSelected) setSelectedPerson('');
+    if (isSelected) {
+      if (editing) cancelEdits();
+      setSelectedPerson('');
+    }
     else setSelectedPerson(person.name); 
   };
   const startEditing = () => {
@@ -28,28 +33,29 @@ const ListItem = (props: {
     setEditing(true);
   };
   const stopEditing = () => {
-    setPersonState({ ...person});
+    setPersonState(person);
     setEditing(false);
   };
   const cancelEdits = () => {
     setPersonState(person);
+    setEditingErrors('');
     stopEditing();
   }
-  const changeName = (e: React.ChangeEvent<HTMLInputElement>) => setPersonState({ ...personState, name: e.target.value });
-  const changePrimary = (e: React.ChangeEvent<HTMLSelectElement>) => setPersonState({ ...personState, primary: e.target.value === 'primary' })
+  const changeName = (e: React.ChangeEvent<HTMLInputElement>) => setPersonState({ ...deepCopyPerson(personState), name: e.target.value });
+  const changePrimary = (e: React.ChangeEvent<HTMLSelectElement>) => setPersonState({ ...deepCopyPerson(personState), primary: e.target.value === 'primary' })
   const changeAvailability = (e: React.ChangeEvent<HTMLSelectElement>, idx: number, startTime: boolean) => {
     const time = e.target.value;
     if (checkIsValidTime(time)) {
-      const newAvailability = personState.availability;
+      const newAvailability = [...deepCopyPerson(personState).availability];
       newAvailability[idx][startTime ? 'startTime' : 'endTime'] = time;
-      setPersonState({ ...personState, availability: newAvailability})
+      setPersonState({ ...deepCopyPerson(personState), availability: newAvailability})
     };
   };
 
-  const updatePerson = () => {
-    const newListState = { ...listState };
+  const saveEdits = () => {
+    const newListState = deepCopyState(listState);
     if (isTherapist) {
-      if (!checkIsTherapist(personState)) {
+      if (!checkIsTherapist(personState) || personState.name.length < 1 || personState.availability.length < 1) {
         setEditingErrors('Invalid or missing data. Please ensure therapist has a name, type (primary/float), and availability');
         return;
       }
@@ -57,19 +63,27 @@ const ListItem = (props: {
       (idx === -1) ? newListState.therapists.push(personState) : newListState.therapists[idx] = personState;
     }
     else {
-      if (checkIsTherapist(personState)) {
+      if (checkIsTherapist(personState) || personState.name.length < 1 || personState.availability.length < 1) {
         setEditingErrors('Invalid or missing data. Please ensure patient has a name and availability');
         return;
       }
       const idx = newListState.patients.findIndex((patient: Patient) => patient.name === person.name);
       (idx === -1) ? newListState.patients.push(personState) : newListState.patients[idx] = personState;
     }
+    setEditingErrors('');
     setListState(newListState);
     stopEditing();
   };
   const deletePerson = () => {
-    const newListState = { ...listState };
-    newListState[isTherapist ? 'therapists' : 'patients'].filter((pers: Person) => pers.name === person.name);
+    const newListState = deepCopyState(listState);
+    if (isTherapist) {
+      const filteredTherapists = newListState.therapists.filter((pers: Person) => pers.name !== person.name);
+      newListState.therapists = filteredTherapists;
+    } else {
+      const filteredPatients = newListState.patients.filter((pers: Person) => pers.name !== person.name);
+      newListState.patients = filteredPatients;
+    }
+    setListState(newListState);
   };
 
   const icon = (iconType: string, tooltipText: string, clickHandler: () => void) => {
@@ -84,33 +98,33 @@ const ListItem = (props: {
     </>
   };
 
-  let defaultTherapistTypeSelection;
+  let therapistTypeSelection;
   if (isTherapist) {
-    switch(person.primary) {
-      case undefined: defaultTherapistTypeSelection = ''; break;
-      case true: defaultTherapistTypeSelection = 'primary'; break;
-      case false: defaultTherapistTypeSelection = 'float'; break;
+    switch(personState.primary) {
+      case undefined: therapistTypeSelection = ''; break;
+      case true: therapistTypeSelection = 'primary'; break;
+      case false: therapistTypeSelection = 'float'; break;
     }
   }
 
   return <li className={isSelected ? 'selected-li' : ''}>
     <div className='li-header'>
       <span>
-        {editing ? <input type='text' value={personState.name} onChange={changeName}></input> : person.name}
+        {editing ? <input className='name-input' type='text' value={personState.name} onChange={changeName}></input> : person.name}
         {isTherapist && person.primary && icon('star', '', () => undefined)}
       </span>
-      <div className={`list-item-icons ${editing ? '' : 'hidden'}`}>
-        {icon('ok', 'save', updatePerson)}{icon('remove', 'cancel', cancelEdits)}
+      <div className='list-item-icons'>
+        {editing
+          ? <>{icon('ok', 'save', saveEdits)}{icon('remove', 'cancel', cancelEdits)}</>
+          :<>{icon('edit', 'edit', startEditing)}{icon('trash', 'delete', deletePerson)}</>
+        }
+        <span className={`glyphicon glyphicon-menu-${isSelected ? 'up' : 'down'}`} onClick={toggleDropdown}></span>
       </div>
-      <div className={`list-item-icons ${editing ? 'hidden' : ''}`}>
-        {icon('edit', 'edit', startEditing)}{icon('trash', 'delete', deletePerson)}
-      </div>
-      <span className={`glyphicon glyphicon-menu-${isSelected ? 'up' : 'down'}`} onClick={toggleDropdown}></span>
     </div>
     {isSelected &&
       <div className='li-edit-options'>
         {isTherapist && 
-          <select defaultValue={defaultTherapistTypeSelection} disabled={!editing} onChange={changePrimary}>
+          <select value={therapistTypeSelection} disabled={!editing} onChange={changePrimary}>
             <option value='' disabled hidden>--Please select--</option>
             <option value='primary'>Primary</option>
             <option value='float'>Float</option>
@@ -120,9 +134,9 @@ const ListItem = (props: {
           <span>Availability:</span>
           {person.availability.map((timeRange: TimeRange, idx: number) =>
             <div key={timeRange.startTime}>
-              <TimeSelect startTime={true} defaultVal={timeRange.startTime} disabled={!editing} idx={idx} changeAvailability={changeAvailability} />
+              <TimeSelect startTime={true} disabled={!editing} idx={idx} availabilityState={personState.availability[idx]} changeAvailability={changeAvailability} />
               to 
-              <TimeSelect startTime={false} defaultVal={timeRange.endTime} disabled={!editing} idx={idx} changeAvailability={changeAvailability} />
+              <TimeSelect startTime={false} disabled={!editing} idx={idx} availabilityState={personState.availability[idx]} changeAvailability={changeAvailability} />
             </div>
           )}
           <span className='add-new-availability'>Add New Availability +</span>

@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import Schedule from './components/Schedule'
 import PatientTherapistList from './components/PatientTherapistList';
-import './reset.css'
-import './App.css';
+import './styling/reset.css';
+import './styling/App.css';
 import { testState } from './testData';
 import { State } from './typing/types';
-
-const deepCopyState = (state: State) => JSON.parse(JSON.stringify(state)) as State;
+import { deepCopyState  } from './helpers/deepCopy';
 
 const App = (): JSX.Element => {
   const [scheduleState, setScheduleState] = useState<State>(deepCopyState(testState));
@@ -22,6 +21,7 @@ const App = (): JSX.Element => {
   const generateSchedule = () => setScheduleState(deepCopyState(listState)); // this triggers the useEffect below
   useEffect(() => {
     // generate schedule here
+    setScheduleError('');
   }, [scheduleState]);
   
   return (
