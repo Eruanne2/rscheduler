@@ -3,8 +3,8 @@ import { Mode, TimeRange, Appointment, State, Person } from "../typing/types";
 import { TIME_SLOTS } from "../constants";
 import { calcHeight, hasAvailable } from "../helpers/timeHelpers";
 
-const Schedule = (props: { scheduleState: State, generateSchedule: () => void, error: string }): JSX.Element => {
-  const { scheduleState, generateSchedule, error } = props;
+const Schedule = (props: { scheduleState: State, buildSchedule: () => void, error: string }): JSX.Element => {
+  const { scheduleState, buildSchedule, error } = props;
   const [scheduleMode, setScheduleMode] = useState<Mode>('therapist');
   const persons = scheduleState[`${scheduleMode}s`];
 
@@ -15,7 +15,7 @@ const Schedule = (props: { scheduleState: State, generateSchedule: () => void, e
   return <div className="schedule">
     <div className='schedule-header'>
       <div className='schedule-controls'>
-        <button className='generate-schedule-btn' onClick={generateSchedule}>Generate Schedule</button>
+        <button className='generate-schedule-btn' onClick={buildSchedule}>Generate Schedule</button>
         <label>
           <input
             type="radio"

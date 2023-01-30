@@ -1,4 +1,4 @@
-import { TimeRange } from "./typing/types";
+import { TimeRange, ValidTime } from "./typing/types";
 
 export const TIME_SLOTS: TimeRange[] = [
   { startTime: '0700', endTime: '0745'},

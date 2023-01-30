@@ -4,8 +4,9 @@ import PatientTherapistList from './components/PatientTherapistList';
 import './styling/reset.css';
 import './styling/App.css';
 import { testState } from './testData';
-import { State } from './typing/types';
+import { State, Appointment } from './typing/types';
 import { deepCopyState  } from './helpers/deepCopy';
+import { generateSchedule } from './helpers/generateSchedule';
 
 const App = (): JSX.Element => {
   const [scheduleState, setScheduleState] = useState<State>(deepCopyState(testState));
@@ -13,16 +14,23 @@ const App = (): JSX.Element => {
   const [scheduleError, setScheduleError] = useState<string>('');
 
   useEffect(() => {
-    if (JSON.stringify(listState) !== JSON.stringify(scheduleState)) {
+    const patientsEqual = JSON.stringify(listState.patients) !== JSON.stringify(scheduleState.patients);
+    const therapistsEqual = JSON.stringify(listState.therapists) !== JSON.stringify(scheduleState.therapists);
+    if (!patientsEqual || !therapistsEqual) {
       setScheduleError('A patient or therapist has been edited. Please regenerate schedule.');
     }
   }, [scheduleState, listState])
 
-  const generateSchedule = () => setScheduleState(deepCopyState(listState)); // this triggers the useEffect below
-  useEffect(() => {
-    // generate schedule here
-    setScheduleError('');
-  }, [scheduleState]);
+  const buildSchedule = () => {
+    const [appts, error] = generateSchedule(listState.patients, listState.therapists);
+    const listStateCopy = deepCopyState(listState);
+    setScheduleState({
+      patients: listStateCopy.patients,
+      therapists: listStateCopy.therapists,
+      appointments: appts
+    }); // this triggers the useEffect below
+    setScheduleError(error);
+  }
   
   return (
     <div className="app">
@@ -30,7 +38,7 @@ const App = (): JSX.Element => {
       <div className='main-container'>
         <Schedule
           scheduleState={scheduleState}
-          generateSchedule={generateSchedule}
+          buildSchedule={buildSchedule}
           error={scheduleError}
         />
         <PatientTherapistList listState={listState} setListState={setListState} />
