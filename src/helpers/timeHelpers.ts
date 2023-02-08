@@ -18,7 +18,7 @@ export const calcHeight = (slot: TimeRange): number => {
 };
 
 export const hasAvailable = (person: Person, slot: TimeRange): boolean => {
-  return person.availability.some((avb: TimeRange) => (
+  return person.genAvailability.some((avb: TimeRange) => (
     dayjs(slot.startTime, 'HHmm').isBetween(dayjs(avb.startTime, 'HHmm'), dayjs(avb.endTime, 'HHmm'), 'minute', '[]')
       && dayjs(slot.endTime, 'HHmm').isBetween(dayjs(avb.startTime, 'HHmm'), dayjs(avb.endTime, 'HHmm'), 'minute', '[]')
   ));

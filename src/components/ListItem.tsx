@@ -46,16 +46,16 @@ const ListItem = (props: {
   const changeAvailability = (e: React.ChangeEvent<HTMLSelectElement>, idx: number, startTime: boolean) => {
     const time = e.target.value;
     if (checkIsValidTime(time)) {
-      const newAvailability = [...deepCopyPerson(personState).availability];
+      const newAvailability = [...deepCopyPerson(personState).genAvailability];
       newAvailability[idx][startTime ? 'startTime' : 'endTime'] = time;
-      setPersonState({ ...deepCopyPerson(personState), availability: newAvailability})
+      setPersonState({ ...deepCopyPerson(personState), genAvailability: newAvailability})
     };
   };
 
   const saveEdits = () => {
     const newListState = deepCopyState(listState);
     if (isTherapist) {
-      if (!checkIsTherapist(personState) || personState.name.length < 1 || personState.availability.length < 1) {
+      if (!checkIsTherapist(personState) || personState.name.length < 1 || personState.genAvailability.length < 1) {
         setEditingErrors('Invalid or missing data. Please ensure therapist has a name, type (primary/float), and availability');
         return;
       }
@@ -63,7 +63,7 @@ const ListItem = (props: {
       (idx === -1) ? newListState.therapists.push(personState) : newListState.therapists[idx] = personState;
     }
     else {
-      if (checkIsTherapist(personState) || personState.name.length < 1 || personState.availability.length < 1) {
+      if (checkIsTherapist(personState) || personState.name.length < 1 || personState.genAvailability.length < 1) {
         setEditingErrors('Invalid or missing data. Please ensure patient has a name and availability');
         return;
       }
@@ -132,11 +132,11 @@ const ListItem = (props: {
         }
         <div>
           <span>Availability:</span>
-          {person.availability.map((timeRange: TimeRange, idx: number) =>
+          {person.genAvailability.map((timeRange: TimeRange, idx: number) =>
             <div key={timeRange.startTime}>
-              <TimeSelect startTime={true} disabled={!editing} idx={idx} availabilityState={personState.availability[idx]} changeAvailability={changeAvailability} />
+              <TimeSelect startTime={true} disabled={!editing} idx={idx} availabilityState={personState.genAvailability[idx]} changeAvailability={changeAvailability} />
               to 
-              <TimeSelect startTime={false} disabled={!editing} idx={idx} availabilityState={personState.availability[idx]} changeAvailability={changeAvailability} />
+              <TimeSelect startTime={false} disabled={!editing} idx={idx} availabilityState={personState.genAvailability[idx]} changeAvailability={changeAvailability} />
             </div>
           )}
           <span className='add-new-availability'>Add New Availability +</span>

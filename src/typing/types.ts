@@ -16,13 +16,15 @@ export type TimeRange = {
 
 export type Patient = {
   name: string,
-  availability: TimeRange[],
+  genAvailability: TimeRange[],
+  type: 'patient',
 };
 
 export type Therapist = {
   name: string,
   primary: boolean,
-  availability: TimeRange[],
+  genAvailability: TimeRange[],
+  type: 'therapist'
 }
 
 export type Person = Patient | Therapist;
