@@ -14,15 +14,15 @@ const App = (): JSX.Element => {
   const [scheduleError, setScheduleError] = useState<string>('');
 
   useEffect(() => {
-    const patientsEqual = JSON.stringify(listState.patients) !== JSON.stringify(scheduleState.patients);
-    const therapistsEqual = JSON.stringify(listState.therapists) !== JSON.stringify(scheduleState.therapists);
-    if (!patientsEqual || !therapistsEqual) {
+    const patientsMismatch = JSON.stringify(listState.patients) !== JSON.stringify(scheduleState.patients);
+    const therapistsMismatch = JSON.stringify(listState.therapists) !== JSON.stringify(scheduleState.therapists);
+    if (patientsMismatch || therapistsMismatch) {
       setScheduleError('A patient or therapist has been edited. Please regenerate schedule.');
     }
   }, [scheduleState, listState])
 
   const buildSchedule = () => {
-    const [appts, error] = generateSchedule(listState.patients, listState.therapists);
+    const [appts, error] = generateSchedule(listState.patients, listState.therapists); // am i planning on this line making changes to teh patients and therapists thmeselves?
     const listStateCopy = deepCopyState(listState);
     setScheduleState({
       patients: listStateCopy.patients,

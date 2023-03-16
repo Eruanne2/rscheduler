@@ -24,7 +24,8 @@ export type Therapist = {
   name: string,
   primary: boolean,
   genAvailability: TimeRange[],
-  type: 'therapist'
+  type: 'therapist',
+  lc?: TimeRange[],
 }
 
 export type Person = Patient | Therapist;
