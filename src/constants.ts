@@ -18,3 +18,5 @@ export const TIME_SLOTS: TimeRange[] = [
   { startTime: '1615', endTime: '1630', break: true},
   { startTime: '1630', endTime: '1715'},
 ];
+
+export const TIME_SLOTS_NO_BREAKS = TIME_SLOTS.filter((ts: TimeRange) => !ts.break);

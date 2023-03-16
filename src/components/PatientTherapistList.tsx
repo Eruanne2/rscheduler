@@ -20,6 +20,7 @@ const PatientTherapistList = (props: { listState: State, setListState: Dispatch<
         name: 'New Therapist',
         primary: true,
         availability: [{ startTime: '0700', endTime: '1715'}],
+        type: 'therapist'
       }
       newListState.therapists.push(newTherapist);
       setSelectedPerson(newTherapist.name);
@@ -28,6 +29,7 @@ const PatientTherapistList = (props: { listState: State, setListState: Dispatch<
       const newPatient: Patient = {
         name: 'New Patient',
         availability: [{ startTime: '0700', endTime: '1715'}],
+        type: 'patient'
       }
       newListState.patients.push(newPatient);
       setSelectedPerson(newPatient.name);
