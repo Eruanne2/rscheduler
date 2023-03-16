@@ -13,7 +13,7 @@ export const testState: State = {
     { name: 'Brian', primary: true, genAvailability: [{ startTime: '0700', endTime: '1530'}], type: 'therapist'},
     { name: 'Shay', primary: false, genAvailability: [{ startTime: '0930', endTime: '1715'}], type: 'therapist'},
     { name: 'Raul', primary: false, genAvailability: [{ startTime: '0930', endTime: '1715'}], type: 'therapist'},
-    { name: 'Ari', primary: true, genAvailability: [], type: 'therapist'},
+    { name: 'Ari', primary: true, genAvailability: [{ startTime: '0700', endTime: '1530'}], type: 'therapist'},
   ],
   appointments: [
     { therapist: 'Brian', time: '0700', patient: 'Pt 1' },

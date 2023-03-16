@@ -137,11 +137,16 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
     const appointments: Appointment[] = [];
     const addAppointment = (therapistName: string, patientName: string, time: ValidTime) => {
       availability[time].therapists[therapistName] = patientName;
-      availability[time].patients[patientName[0]] = therapistName;
+      availability[time].patients[patientName] = therapistName;
+      appointments.push({ patient: patientName, therapist: therapistName, time: time});
+      console.log(`appointment added for ${therapistName} and ${patientName} at ${time}`);
     };
     const removeAppointment = (therapistName: string, patientName: string, time: ValidTime) => {
       availability[time].therapists[therapistName] = true;
-      availability[time].patients[patientName[0]] = true;
+      availability[time].patients[patientName] = true;
+      const idx = appointments.findIndex((appt) => appt.therapist === therapistName && appt.patient === patientName && appt.time === time);
+      if (idx > 0) appointments.splice(idx, 1);
+      console.log(`appointment removed for ${therapistName} and ${patientName} at ${time}`);
     };
     const overlappingAvailability = (patient: Patient, therapist: Therapist): ValidTime[] => {
       return (Object.keys(availability) as ValidTime[]).filter((time) => {
@@ -179,38 +184,66 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
     // ------------------------------
     // Test 2 - using DFS to brute force! (this uses the methods/constants defined above in Test 1)
 
-    const schedulePtWithPrimaries = (patient: Patient, patientsLeftToSchedule: Patient[]) => {
+    const schedulePtWithPrimaries = (patient: Patient, patientsLeftToSchedule: Patient[]): boolean => {
+      console.log('line 185 - new loop beginning')
+      if (patientsLeftToSchedule.length < 1) return true; // success base case - all scheduling is done
       if (primaries.length === 2) {
         const [primary1, primary2] = primaries;
         const slotsWithPrimary1 = overlappingAvailability(patient, primary1);
         const slotsWithPrimary2 = overlappingAvailability(patient, primary2);
         const sameSlot = slotsWithPrimary1.length === 1 && slotsWithPrimary2.length === 1 && slotsWithPrimary1[0] === slotsWithPrimary2[0];
-        if (slotsWithPrimary1.length < 1 || slotsWithPrimary2.length < 1 || sameSlot) return false; // failure base case
+        if (slotsWithPrimary1.length < 1 || slotsWithPrimary2.length < 1 || sameSlot) {
+          errorMessage = `${patient.name} cannot be seen by ${primary1.name} and/or ${primary2.name}`
+          debugger
+          return false; // failure base case
+        }
 
-        addAppointment(primary1.name, patient.name, slotsWithPrimary1[0]);
-        const updatedSlots2 = overlappingAvailability(patient, primary2);
-        addAppointment(primary2.name, patient.name, updatedSlots2[0]);
-        
+        let successfulNextSchedule = false;
+        for (let i=0; i<slotsWithPrimary1.length; i++) {
+          addAppointment(primary1.name, patient.name, slotsWithPrimary1[i]);
+
+          const updatedSlots2 = overlappingAvailability(patient, primary2);
+          for (let j=0; j<updatedSlots2.length; j++) {
+            addAppointment(primary2.name, patient.name, updatedSlots2[j]);
+
+            const nextPatient = patientsLeftToSchedule.shift();
+            successfulNextSchedule = nextPatient ? schedulePtWithPrimaries(nextPatient, patientsLeftToSchedule) : false;
+            if (successfulNextSchedule) break;
+            else removeAppointment(primary2.name, patient.name, updatedSlots2[j]);
+          }
+          if (successfulNextSchedule) break;
+          else removeAppointment(primary1.name, patient.name, slotsWithPrimary1[i]);
+        };
+        return successfulNextSchedule;
+    
       } else if (primaries.length === 1) {
         const primary = primaries[0];
         const possibleSlots = overlappingAvailability(patient, primary);
-        if (possibleSlots.length < 1) return false; // failure base case
+        if (possibleSlots.length < 1) {
+          errorMessage = `${patient.name} cannot be seen by ${primary.name}`
+          debugger
+          return false; // failure base case
+        }
 
-        addAppointment(primary.name, patient.name, possibleSlots[0]);
+        let successfulNextSchedule = false;
+        for (let i=0; i<possibleSlots.length; i++) {
+          addAppointment(primary.name, patient.name, possibleSlots[i]);
+          const nextPatient = patientsLeftToSchedule.shift();
+          successfulNextSchedule = nextPatient ? schedulePtWithPrimaries(nextPatient, patientsLeftToSchedule) : false;
+          if (successfulNextSchedule) break;
+          else removeAppointment(primary.name, patient.name, possibleSlots[i]);
+        }
+        return successfulNextSchedule;
 
       } else {
         errorMessage = 'there must be either 1 or 2 primaries';
-      }
-
-      const finished = patientsLeftToSchedule.length < 1;
-      if (finished) return true; // success baes case
-      
-      const nextPatient = patientsLeftToSchedule.shift();
-      if (nextPatient /* always true */) {
-        schedulePtWithPrimaries(nextPatient, patientsLeftToSchedule);  
+        debugger
+        return false;
       }
     };
 
+    schedulePtWithPrimaries(patients[0], patients.slice(1));
+    
 
   // ---------------
   return [appointments, errorMessage];

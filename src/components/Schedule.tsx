@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Mode, TimeRange, Appointment, State, Person } from "../typing/types";
 import { TIME_SLOTS } from "../constants";
 import { calcHeight, hasAvailable } from "../helpers/timeHelpers";
@@ -6,9 +6,13 @@ import { calcHeight, hasAvailable } from "../helpers/timeHelpers";
 const Schedule = (props: { scheduleState: State, buildSchedule: () => void, error: string }): JSX.Element => {
   const { scheduleState, buildSchedule, error } = props;
   const [scheduleMode, setScheduleMode] = useState<Mode>('therapist');
-  const persons = scheduleState[`${scheduleMode}s`];
+  const [persons, setPersons] = useState<Person[]>(scheduleState[`${scheduleMode}s`]);
 
-  const handleModeChange = (newMode: Mode): void => setScheduleMode(newMode);
+  const handleModeChange = (newMode: Mode): void => {
+    setScheduleMode(newMode);
+    setPersons(scheduleState[`${newMode}s`]);
+  }
+
   const findAppointment = (person: Person, slot: TimeRange): Appointment | undefined =>
     scheduleState.appointments.find((appt: Appointment) => appt.time === slot.startTime && appt[scheduleMode] === person.name);
 
