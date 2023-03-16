@@ -19,7 +19,7 @@ const PatientTherapistList = (props: { listState: State, setListState: Dispatch<
       const newTherapist: Therapist = {
         name: 'New Therapist',
         primary: true,
-        availability: [{ startTime: '0700', endTime: '1715'}],
+        genAvailability: [{ startTime: '0700', endTime: '1715'}],
         type: 'therapist'
       }
       newListState.therapists.push(newTherapist);
@@ -28,7 +28,7 @@ const PatientTherapistList = (props: { listState: State, setListState: Dispatch<
 
       const newPatient: Patient = {
         name: 'New Patient',
-        availability: [{ startTime: '0700', endTime: '1715'}],
+        genAvailability: [{ startTime: '0700', endTime: '1715'}],
         type: 'patient'
       }
       newListState.patients.push(newPatient);

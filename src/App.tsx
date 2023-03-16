@@ -14,9 +14,9 @@ const App = (): JSX.Element => {
   const [scheduleError, setScheduleError] = useState<string>('');
 
   useEffect(() => {
-    const patientsEqual = JSON.stringify(listState.patients) !== JSON.stringify(scheduleState.patients);
-    const therapistsEqual = JSON.stringify(listState.therapists) !== JSON.stringify(scheduleState.therapists);
-    if (!patientsEqual || !therapistsEqual) {
+    const patientsMismatch = JSON.stringify(listState.patients) !== JSON.stringify(scheduleState.patients);
+    const therapistsMismatch = JSON.stringify(listState.therapists) !== JSON.stringify(scheduleState.therapists);
+    if (patientsMismatch || therapistsMismatch) {
       setScheduleError('A patient or therapist has been edited. Please regenerate schedule.');
     }
   }, [scheduleState, listState])

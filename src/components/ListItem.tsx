@@ -42,7 +42,12 @@ const ListItem = (props: {
     stopEditing();
   }
   const changeName = (e: React.ChangeEvent<HTMLInputElement>) => setPersonState({ ...deepCopyPerson(personState), name: e.target.value });
-  const changePrimary = (e: React.ChangeEvent<HTMLSelectElement>) => setPersonState({ ...deepCopyPerson(personState), primary: e.target.value === 'primary' })
+  const changePrimary = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (checkIsTherapist(personState)) {
+      const therapistState = { ...deepCopyPerson(personState), primary: e.target.value === 'primary' };
+      setPersonState(therapistState);
+    }
+  }
   const changeAvailability = (e: React.ChangeEvent<HTMLSelectElement>, idx: number, startTime: boolean) => {
     const time = e.target.value;
     if (checkIsValidTime(time)) {
