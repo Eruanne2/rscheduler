@@ -5,7 +5,7 @@ import './styling/reset.css';
 import './styling/App.css';
 import { testState } from './testData';
 import { State, Appointment } from './typing/types';
-import { deepCopyState  } from './helpers/deepCopy';
+import { deepCopyState  } from './helpers/generalHelpers';
 import { generateSchedule } from './helpers/generateSchedule';
 
 const App = (): JSX.Element => {

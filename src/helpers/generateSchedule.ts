@@ -2,7 +2,7 @@
 import { start } from 'repl';
 import { TIME_SLOTS_NO_BREAKS } from '../constants';
 import { Patient, Therapist, Person, Appointment, TimeRange, ValidTime } from '../typing/types';
-import { deepCopyPerson } from './deepCopy';
+import { deepCopyPerson, randomize } from './generalHelpers';
 import { hasAvailable } from './timeHelpers';
 
 const slotsWithinRange = (range: TimeRange): TimeRange[] => (
@@ -17,13 +17,17 @@ const listAvailableStartTimes = (person: Person): ValidTime[] => {
 };
 
 export const generateSchedule = (patients: Patient[], therapists: Therapist[]): [appts: Appointment[], errors: string] => {
+  // remove any lc from last previous schedule
+  therapists.forEach((therapist) => therapist.lc = undefined);
+
   let primaries = therapists.filter((therapist) => therapist.primary);
   let floats = therapists.filter((therapist) => !therapist.primary);
+  let lcTherapists: Therapist[] = [];
 
   const availability = Object.fromEntries(
     TIME_SLOTS_NO_BREAKS.map((ts: TimeRange) => {
       const peopleAvailability: { patients: Record<string, boolean | string>, therapists: Record<string, boolean | string>} = { patients: {}, therapists: {} };
-      [...patients, ...primaries].forEach((person: Person) => { // start with primaries only
+      [...patients, ...therapists].forEach((person: Person) => {
         peopleAvailability[`${person.type}s`][person.name] = hasAvailable(person, ts);
       })
       return [ts.startTime, peopleAvailability];
@@ -46,6 +50,10 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
     // }
     const appointments: Appointment[] = [];
     const addAppointment = (therapistName: string, patientName: string, time: ValidTime) => {
+      const patientFree = availability[time].patients[patientName] === true;
+      const therapistFree = availability[time].therapists[therapistName] === true;
+      if (!patientFree || !therapistFree) debugger
+
       availability[time].therapists[therapistName] = patientName;
       availability[time].patients[patientName] = therapistName;
       appointments.push({ patient: patientName, therapist: therapistName, time: time});
@@ -65,6 +73,7 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
         return patientFree && therapistFree;
       });
     };
+    const patientNeedsMoreSessions = (patientName: string) => appointments.filter((appt) => appt.patient === patientName).length < 4;
     let errorMessage = '';
 
     // schedule primaries or floats first?
@@ -80,8 +89,7 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
     // I'm leaning towards first option since it is most optimal and ignores a (hopefully rare?) edge case. 
 
 
-
-    const scheduleSessions = () => {
+    const handleLowCensus = () => {
       const patientSessionsNeeded = patients.length * 4;
       const therapistsSlots = therapists.map((therapist: Therapist) => listAvailableStartTimes(therapist).length); 
       let numTherapistSlots = therapistsSlots.reduce((acc, numSlots) => acc + numSlots); // adjust this to actually count slots in each therapists' availability
@@ -89,32 +97,64 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
       const floatCanGoHome = (numTherapistSlots - patientSessionsNeeded) >= 8;
       // should this be a while loop so that if multiple floats can go home, they will? for now I'm assuming only 1 will ever need to go home
       if (floatCanGoHome) {
-        // how to decide which float if there are multiple?
-        const floatGoingHome = floats[0]; // just pick the first for now
-        if (floatGoingHome) floatGoingHome.lc = floatGoingHome.genAvailability;
-        //    (will need to add logic in the Schedule component to display the LC blocks differently.)
-        floats = floats.slice(1);
+        const floatGoingHome = randomize(floats);
+        if (floatGoingHome) floatGoingHome.lc = floatGoingHome.genAvailability; 
+        // update this - instead of storing lc on the therapist, store it in a separate LC object that can be easily cleared every time we regenerate
+        const lcFloat = floats.shift();
+        if (lcFloat) lcTherapists.push(lcFloat);
         numTherapistSlots -= 8;
       }
-      const floatTakeHalfDay = (numTherapistSlots - patientSessionsNeeded) >= 4; // same note as line 85
-      const floatTakingHalfDay = floats[0]; // randomize
+      const floatShouldTakeHalfDay = (numTherapistSlots - patientSessionsNeeded) >= 4;
+      if (floatShouldTakeHalfDay) {
+        const floatTakingHalfDay = randomize(floats);
+  
+        // If TS - PSN > 4, we need to do a half day for a float. Go ahead and schedule this float (morning) and add a
+        // time range called "LC" for their half day.
+        
+        // assume the float has full availability (8 slots)
+        listAvailableStartTimes(floatTakingHalfDay).slice(0, 4).forEach((slot: ValidTime) => {
+          const possiblePatients = Object.keys(availability[slot].patients).filter((ptName: string) => availability[slot].patients[ptName] === true && patientNeedsMoreSessions(ptName));
+          const patientName = randomize(possiblePatients);
+          addAppointment(floatTakingHalfDay.name, patientName, slot);
+        });
 
-      // If TS - PSN > 4, we need to do a half day for a float. Go ahead and schedule this float (morning) and add a
-      // time range called "LC" for their half day.
+      }
+    };
+
+
+    const scheduleSessions = () => {
+      // 1. first send any floats home and/or schedule any floats that are taking a half day.
+      handleLowCensus();
       
-      // assume the float has full availability (8 slots)
-      listAvailableStartTimes(floatTakingHalfDay).slice(0, 4).forEach((slot: ValidTime) => {
-        const possiblePatients = Object.keys(availability[slot].patients).filter((ptName: string) => availability[slot].patients[ptName] === true);
-        const patientName = possiblePatients[Math.floor(Math.random() * possiblePatients.length)];
-        addAppointment(floatTakingHalfDay.name, patientName, slot);
+      // 2. then schedule the primaries.
+      primaries.forEach((primary) => {
+        // first make sure each primary sees each patient
+        patients.forEach((patient) => {
+          const slot: ValidTime = randomize(overlappingAvailability(patient, primary));
+          addAppointment(primary.name, patient.name, slot);
+        });
+
+        // then fill in the gaps in the primaries' schedules
+        const emptySlots = Object.keys(availability).filter((time) => availability[time].therapists[primary.name] === true) as ValidTime[];
+        emptySlots.forEach((slot) => {
+          const possiblePatients = Object.keys(availability[slot].patients).filter((ptName: string) => availability[slot].patients[ptName] === true && patientNeedsMoreSessions(ptName));
+          const patientName = randomize(possiblePatients);
+          addAppointment(primary.name, patientName, slot);
+        });
       });
-      
-      // 3. then schedule the primaries.
-      
 
-      // 4. then schedule the remaining floats.
 
-      // we'll ignore all edge cases at first. once this is working, I'll have Raul play with it and see if he can find any.
+      // 3. then schedule the patient's remaining sessions using floats.
+      patients.forEach((patient) => {
+        while (patientNeedsMoreSessions(patient.name)) {
+          const float = randomize(floats);
+          const slot = randomize(overlappingAvailability(patient, float));
+          addAppointment(float.name, patient.name, slot);
+        }
+      });
+
+
+      // we'll ignore all edge cases at first. once this is working, I'll have Raul play with it and see if he can find any more.
       // then I'll decide how to handle them. 
 
 
@@ -123,9 +163,72 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
       // and see different options!
     };
 
-    const spaceOutAppts = () => {
-      // in the remaining availability (minus LC), create as much space between appointments as possible for patients
+    const optimizeAppts = () => {
+      // in the remaining availability (minus LC), optimize by:
+      // - moving appointments earlier so that therapists can go home early if possible
+      // - creating as much space between appointments as possible for patients. thankfully, the randomization does this pretty well!
+      // - avoiding too many appointments with the same therapist (?)
+      
+      // 1. move therapists' empty slots as late as possible
+      const therapistsWithEmptySlots = therapists.filter((therapist) => !lcTherapists.includes(therapist) && appointments.filter((appt) => appt.therapist === therapist.name).length < 8);
+      therapistsWithEmptySlots.forEach((therapist) => {
+        const therapistAppts = appointments.filter((appt) => appt.therapist === therapist.name);
+        const apptsLastToFirst: Appointment[] = JSON.parse(JSON.stringify(therapistAppts)).sort((a: Appointment, b: Appointment) => b.time.localeCompare(a.time));
+        const startTimes = listAvailableStartTimes(therapist);
+        const lastSlot = startTimes[startTimes.length - 1]
+        const emptySlots = startTimes.filter((time) => !therapistAppts.map((appt) => appt.time).includes(time));
+        emptySlots.forEach((emptySlot) => {
+          // const apptsToMove: Appointment[] = [];
+          const swapAppts = (slotToFill: ValidTime): boolean => { 
+            console.log('slotToFill', slotToFill);
+            console.log('apptsLastToFirst', apptsLastToFirst);
+            debugger
+            if (slotToFill === lastSlot) return true;
+
+            for (let i = 1; i < apptsLastToFirst.length; i++) {
+              let appointment = apptsLastToFirst[i];
+              if (availability[slotToFill].patients[appointment.patient] === true) {
+                // apptsToMove.push(appointment);
+                const nextSlotToFill = appointment.time;
+                appointment.time = slotToFill;
+                apptsLastToFirst.sort((a: Appointment, b: Appointment) => b.time.localeCompare(a.time));
+                console.log(`moved ${nextSlotToFill} to ${slotToFill}`);
+                return swapAppts(nextSlotToFill);
+              }
+            }
+            return false;
+          };
+          if (swapAppts(emptySlot)) {
+            // now update the moved appointments in the appointments array
+            // debugger
+            // let slotToFill = emptySlot;
+            // while (apptsToMove.length > 0) {
+            //   const appt = apptsToMove.shift();
+            //   if (appt) {
+            //     const prevTime = appt.time;
+            //     appt.time = slotToFill;
+            //     slotToFill = prevTime;
+            //   }
+            // }
+          }
+        });
+        // this is a recursive problem. We want to rearrange a therapist's appointments such that the empty slot(s) is at the end of the day.
+        // if this fails, it might be possible to trade appointments with other therapists and make it work that way...but for now, I'm going to ignore that case.
+        // I think this should work most of the time.
+
+        // until their last slot is empty (success base case)
+          // starting with the latest appointments, try moving each appointment into the empty slot.
+          // once we successfully move one, check for success. if not, move one level down and start the process over, keeping the moved appointment. 
+          // failure base case - we can't move anyone into the empty slot. if this happens, bump up to the next level and try the next appointment.
+      })
+
+      // 2. create as much space between appointments as possible for patients. thankfully, the randomization does this pretty well!
+
+      // 3. avoiding too many appointments with the same therapist (?)
     };
+
+    scheduleSessions();
+    optimizeAppts();
 
 
   // ---------------

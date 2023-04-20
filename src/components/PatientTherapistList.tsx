@@ -1,6 +1,6 @@
 import { Mode } from "fs";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { deepCopyState } from "../helpers/deepCopy";
+import { deepCopyState } from "../helpers/generalHelpers";
 import { State, Person, Patient, Therapist } from "../typing/types";
 import ListItem from "./ListItem";
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Mode, TimeRange, Appointment, State, Person } from "../typing/types";
 import { TIME_SLOTS } from "../constants";
-import { calcHeight, hasAvailable } from "../helpers/timeHelpers";
+import { calcHeight, hasAvailable, isLC } from "../helpers/timeHelpers";
 
 const Schedule = (props: { scheduleState: State, buildSchedule: () => void, error: string }): JSX.Element => {
   const { scheduleState, buildSchedule, error } = props;
@@ -57,7 +57,7 @@ const Schedule = (props: { scheduleState: State, buildSchedule: () => void, erro
               let text;
               if (scheduleMode === 'therapist') text = appointment ? appointment.patient : '';
               else text = appointment ? appointment.therapist : '';
-              return <td key={person.name} className={`col-${idx} ${hasAvailable(person, slot) ? '' : 'block-off'}`}>{text}</td>
+              return <td key={person.name} className={`col-${idx} ${hasAvailable(person, slot) ? '' : 'block-off'} ${isLC(person, slot) ? 'lc' : ''}`}>{text}</td>
             })}
           </tr>
         )}

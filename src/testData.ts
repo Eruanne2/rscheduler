@@ -15,16 +15,5 @@ export const testState: State = {
     { name: 'Raul', primary: false, genAvailability: [{ startTime: '0930', endTime: '1715'}], type: 'therapist'},
     { name: 'Ari', primary: true, genAvailability: [{ startTime: '0930', endTime: '1715'}], type: 'therapist'},
   ],
-  appointments: [
-    { therapist: 'Brian', time: '0700', patient: 'Pt 1' },
-    { therapist: 'Brian', time: '0745', patient: 'Pt 2' },
-    { therapist: 'Brian', time: '1115', patient: 'Pt 3' },
-    { therapist: 'Brian', time: '0930', patient: 'Pt 4' },
-    { therapist: 'Shay', time: '1445', patient: 'Pt 4' },
-    { therapist: 'Shay', time: '1530', patient: 'Pt 5' },
-    { therapist: 'Shay', time: '1630', patient: 'Pt 6' },
-    { therapist: 'Raul', time: '0930', patient: 'Pt 1' },
-    { therapist: 'Raul', time: '1030', patient: 'Pt 2' },
-    { therapist: 'Raul', time: '1115', patient: 'Pt 3' },
-  ]
+  appointments: [],
 };
