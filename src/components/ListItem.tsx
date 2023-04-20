@@ -2,7 +2,7 @@ import React, { Dispatch, SetStateAction, useState } from "react";
 import { Patient, Therapist, Person, TimeRange, State } from "../typing/types";
 import TimeSelect from "./TimeSelect";
 import { checkIsTherapist, checkIsValidTime } from '../typing/typeGuards'
-import { deepCopyState, deepCopyPerson } from '../helpers/deepCopy';
+import { deepCopyState, deepCopyPerson } from '../helpers/generalHelpers';
 import { Tooltip } from "react-tooltip";
 import 'react-tooltip/dist/react-tooltip.css'
 

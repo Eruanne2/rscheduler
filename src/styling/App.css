@@ -193,3 +193,7 @@ input[type=radio] {
 .schedule tr.block-off td:not(:first-child), .schedule td.block-off {
   background-color: #b7b7b7;
 }
+
+.schedule tr.lc td:not(:first-child), .schedule td.lc {
+  background-color: #d27373;
+}
