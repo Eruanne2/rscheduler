@@ -1,57 +1,43 @@
-import { Mode } from "fs";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { deepCopyState } from "../helpers/generalHelpers";
-import { State, Person, Patient, Therapist } from "../typing/types";
+import { useContext } from "react";
+import { Person, Patient, Therapist } from "../typing/types";
 import ListItem from "./ListItem";
+import { AppContext } from "../state/context";
+import { addPatient, addTherapist, setMode } from "../state/actionCreators";
 
-const PatientTherapistList = (props: { listState: State, setListState: Dispatch<SetStateAction<State>>}): JSX.Element => {
-  const { listState, setListState } = props;
-  const [selectedTab, setSelectedTab] = useState<Mode>('therapist');
-  const [selectedPerson, setSelectedPerson] = useState<string>('');
-
-  useEffect(() => {
-    setSelectedPerson('');
-  }, [selectedTab])
+const PatientTherapistList = (): JSX.Element => {
+  const { state, dispatch } = useContext(AppContext);
 
   const addNewPerson = () => {
-    const newListState = deepCopyState(listState);
-    if (selectedTab === 'therapist') {
+    if (state.listMode === 'therapist') {
       const newTherapist: Therapist = {
         name: 'New Therapist',
         primary: true,
         genAvailability: [{ startTime: '0700', endTime: '1715'}],
-        type: 'therapist'
+        type: 'therapist',
+        appointments: [],
       }
-      newListState.therapists.push(newTherapist);
-      setSelectedPerson(newTherapist.name);
+      dispatch(addTherapist(newTherapist));
     } else {
 
       const newPatient: Patient = {
         name: 'New Patient',
         genAvailability: [{ startTime: '0700', endTime: '1715'}],
-        type: 'patient'
+        type: 'patient',
+        appointments: [],
       }
-      newListState.patients.push(newPatient);
-      setSelectedPerson(newPatient.name);
+      dispatch(addPatient(newPatient));
     }
-    setListState(newListState);
+
   };
 
   return <div className="list-container">
     <ul className="list-tabs">
-      <li className="tab" onClick={() => setSelectedTab('therapist')}>Therapists</li>
-      <li className="tab" onClick={() => setSelectedTab('patient')}>Patients</li>
+      <li className="tab" onClick={() => dispatch(setMode('list', 'therapist'))}>Therapists</li>
+      <li className="tab" onClick={() => dispatch(setMode('list', 'patient'))}>Patients</li>
     </ul>
     <ul className='pt-list'>
-      {listState[selectedTab === 'therapist' ? 'therapists' : 'patients'].map((person: Person) => 
-        <ListItem
-        key={person.name}
-          person={person}
-          selectedPerson={selectedPerson}
-          setSelectedPerson={setSelectedPerson}
-          listState={listState}
-          setListState={setListState}
-        />
+      {state[state.listMode === 'therapist' ? 'therapists' : 'patients'].map((person: Person) => 
+        <ListItem key={person.name} person={person} />
       )}
     </ul>
     <span className='glyphicon glyphicon-plus' onClick={addNewPerson}></span>

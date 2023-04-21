@@ -1,27 +1,29 @@
-import { useState } from "react";
-import { Mode, TimeRange, Appointment, State, Person } from "../typing/types";
+import { useContext } from "react";
+import { Mode, TimeRange, Appointment, Person } from "../typing/types";
 import { TIME_SLOTS } from "../constants";
 import { calcHeight, hasAvailable, isLC } from "../helpers/timeHelpers";
+import { AppContext } from "../state/context";
+import { generateSchedule } from "../helpers/generateSchedule";
+import { setMode } from "../state/actionCreators";
 
-const Schedule = (props: { scheduleState: State, buildSchedule: () => void, error: string }): JSX.Element => {
-  const { scheduleState, buildSchedule, error } = props;
-  const [scheduleMode, setScheduleMode] = useState<Mode>('therapist');
-  const persons = scheduleState[`${scheduleMode}s`];
+const Schedule = (): JSX.Element => {
+  const { state, dispatch } = useContext(AppContext);
+  const persons = state[`${state.scheduleMode}s`];
 
-  const handleModeChange = (newMode: Mode): void => setScheduleMode(newMode);
+  const handleModeChange = (newMode: Mode): void => dispatch(setMode('schedule', newMode));
   const findAppointment = (person: Person, slot: TimeRange): Appointment | undefined =>
-    scheduleState.appointments.find((appt: Appointment) => appt.time === slot.startTime && appt[scheduleMode] === person.name);
+    state.appointments.find((appt: Appointment) => appt.time === slot.startTime && appt[state.scheduleMode] === person.name);
 
   return <div className="schedule">
     <div className='schedule-header'>
       <div className='schedule-controls'>
-        <button className='generate-schedule-btn' onClick={buildSchedule}>Generate Schedule</button>
+        <button className='generate-schedule-btn' onClick={() => generateSchedule(state, dispatch)}>Generate Schedule</button>
         <label>
           <input
             type="radio"
             value="therapist"
             name="schedule-mode"
-            checked={scheduleMode === 'therapist'}
+            checked={state.scheduleMode === 'therapist'}
             onChange={() =>handleModeChange('therapist')}
           />
           Therapist
@@ -31,13 +33,13 @@ const Schedule = (props: { scheduleState: State, buildSchedule: () => void, erro
             type="radio"
             value="patient"
             name="schedule-mode"
-            checked={scheduleMode === 'patient'}
+            checked={state.scheduleMode === 'patient'}
             onChange={() => handleModeChange('patient')}
           />
           Patient
         </label>
       </div>
-      <div className="error">{error}</div>
+      <div className="error">{state.scheduleError}</div>
     </div>
     <table>
       <thead>
@@ -55,9 +57,9 @@ const Schedule = (props: { scheduleState: State, buildSchedule: () => void, erro
             {persons.map((person: Person, idx: number) => {
               const appointment = findAppointment(person, slot)
               let text;
-              if (scheduleMode === 'therapist') text = appointment ? appointment.patient : '';
+              if (state.scheduleMode === 'therapist') text = appointment ? appointment.patient : '';
               else text = appointment ? appointment.therapist : '';
-              return <td key={person.name} className={`col-${idx} ${hasAvailable(person, slot) ? '' : 'block-off'} ${isLC(person, slot) ? 'lc' : ''}`}>{text}</td>
+              return <td key={person.name} className={`col-${idx} ${hasAvailable(person, slot) ? '' : 'block-off'} ${isLC(person, slot, state) ? 'lc' : ''}`}>{text}</td>
             })}
           </tr>
         )}

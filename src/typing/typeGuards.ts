@@ -1,6 +1,7 @@
 import { Person, Therapist, ValidTime } from './types';
 
-export const checkIsTherapist = (person: Person): person is Therapist => {
+export const checkIsTherapist = (person: Person | null): person is Therapist => {
+  if (!person) return false;
   return (person as Therapist).primary !== undefined;
 };
 

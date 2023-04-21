@@ -1,9 +1,8 @@
-
-import { start } from 'repl';
 import { TIME_SLOTS_NO_BREAKS } from '../constants';
-import { Patient, Therapist, Person, Appointment, TimeRange, ValidTime } from '../typing/types';
-import { deepCopyPerson, randomize } from './generalHelpers';
+import { Patient, Therapist, Person, Appointment, TimeRange, ValidTime, State, ReducerAction } from '../typing/types';
+import { randomize } from './generalHelpers';
 import { hasAvailable } from './timeHelpers';
+import { addAppointment, addLC } from '../state/actionCreators';
 
 const slotsWithinRange = (range: TimeRange): TimeRange[] => (
   TIME_SLOTS_NO_BREAKS.filter((slot: TimeRange) => range.startTime <= slot.startTime && range.endTime >= slot.endTime)
@@ -16,18 +15,15 @@ const listAvailableStartTimes = (person: Person): ValidTime[] => {
   }, startTimes);
 };
 
-export const generateSchedule = (patients: Patient[], therapists: Therapist[]): [appts: Appointment[], errors: string] => {
-  // remove any lc from last previous schedule
-  therapists.forEach((therapist) => therapist.lc = undefined);
-
-  let primaries = therapists.filter((therapist) => therapist.primary);
-  let floats = therapists.filter((therapist) => !therapist.primary);
+export const generateSchedule = (state: State, dispatch: React.Dispatch<ReducerAction>): void => {
+  let primaries = state.therapists.filter((therapist) => therapist.primary);
+  let floats = state.therapists.filter((therapist) => !therapist.primary);
   let lcTherapists: Therapist[] = [];
 
   const availability = Object.fromEntries(
     TIME_SLOTS_NO_BREAKS.map((ts: TimeRange) => {
       const peopleAvailability: { patients: Record<string, boolean | string>, therapists: Record<string, boolean | string>} = { patients: {}, therapists: {} };
-      [...patients, ...therapists].forEach((person: Person) => {
+      [...state.patients, ...state.therapists].forEach((person: Person) => {
         peopleAvailability[`${person.type}s`][person.name] = hasAvailable(person, ts);
       })
       return [ts.startTime, peopleAvailability];
@@ -49,17 +45,18 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
     //   '0745': ...
     // }
     const appointments: Appointment[] = [];
-    const addAppointment = (therapistName: string, patientName: string, time: ValidTime) => {
+    const checkAndAddAppointment = (therapistName: string, patientName: string, time: ValidTime) => {
       const patientFree = availability[time].patients[patientName] === true;
       const therapistFree = availability[time].therapists[therapistName] === true;
-      if (!patientFree || !therapistFree) debugger
 
       availability[time].therapists[therapistName] = patientName;
       availability[time].patients[patientName] = therapistName;
-      appointments.push({ patient: patientName, therapist: therapistName, time: time});
+      const appointment: Appointment = { patient: patientName, therapist: therapistName, time: time};
+      appointments.push(appointment);
+      dispatch(addAppointment(appointment))
       console.log(`appointment added for ${therapistName} and ${patientName} at ${time}`);
     };
-    const removeAppointment = (therapistName: string, patientName: string, time: ValidTime) => {
+    const checkAndRemoveAppointment = (therapistName: string, patientName: string, time: ValidTime) => {
       availability[time].therapists[therapistName] = true;
       availability[time].patients[patientName] = true;
       const idx = appointments.findIndex((appt) => appt.therapist === therapistName && appt.patient === patientName && appt.time === time);
@@ -90,16 +87,16 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
 
 
     const handleLowCensus = () => {
-      const patientSessionsNeeded = patients.length * 4;
-      const therapistsSlots = therapists.map((therapist: Therapist) => listAvailableStartTimes(therapist).length); 
+      const patientSessionsNeeded = state.patients.length * 4;
+      const therapistsSlots = state.therapists.map((therapist: Therapist) => listAvailableStartTimes(therapist).length); 
       let numTherapistSlots = therapistsSlots.reduce((acc, numSlots) => acc + numSlots); // adjust this to actually count slots in each therapists' availability
 
       const floatCanGoHome = (numTherapistSlots - patientSessionsNeeded) >= 8;
       // should this be a while loop so that if multiple floats can go home, they will? for now I'm assuming only 1 will ever need to go home
       if (floatCanGoHome) {
-        const floatGoingHome = randomize(floats);
-        if (floatGoingHome) floatGoingHome.lc = floatGoingHome.genAvailability; 
-        // update this - instead of storing lc on the therapist, store it in a separate LC object that can be easily cleared every time we regenerate
+        const floatGoingHome: Therapist = randomize(floats);
+        dispatch(addLC(floatGoingHome.name, floatGoingHome.genAvailability));
+        
         const lcFloat = floats.shift();
         if (lcFloat) lcTherapists.push(lcFloat);
         numTherapistSlots -= 8;
@@ -112,12 +109,14 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
         // time range called "LC" for their half day.
         
         // assume the float has full availability (8 slots)
-        listAvailableStartTimes(floatTakingHalfDay).slice(0, 4).forEach((slot: ValidTime) => {
+        const floatSlots = listAvailableStartTimes(floatTakingHalfDay)
+        floatSlots.slice(0, 4).forEach((slot: ValidTime) => {
           const possiblePatients = Object.keys(availability[slot].patients).filter((ptName: string) => availability[slot].patients[ptName] === true && patientNeedsMoreSessions(ptName));
           const patientName = randomize(possiblePatients);
-          addAppointment(floatTakingHalfDay.name, patientName, slot);
+          checkAndAddAppointment(floatTakingHalfDay.name, patientName, slot);
         });
-
+        const floatEndOfDay = floatTakingHalfDay.genAvailability[floatTakingHalfDay.genAvailability.length - 1].endTime;
+        dispatch(addLC(floatTakingHalfDay.name, [{ startTime: floatSlots[4], endTime: floatEndOfDay}]));
       }
     };
 
@@ -129,9 +128,9 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
       // 2. then schedule the primaries.
       primaries.forEach((primary) => {
         // first make sure each primary sees each patient
-        patients.forEach((patient) => {
+        state.patients.forEach((patient) => {
           const slot: ValidTime = randomize(overlappingAvailability(patient, primary));
-          addAppointment(primary.name, patient.name, slot);
+          checkAndAddAppointment(primary.name, patient.name, slot);
         });
 
         // then fill in the gaps in the primaries' schedules
@@ -139,17 +138,17 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
         emptySlots.forEach((slot) => {
           const possiblePatients = Object.keys(availability[slot].patients).filter((ptName: string) => availability[slot].patients[ptName] === true && patientNeedsMoreSessions(ptName));
           const patientName = randomize(possiblePatients);
-          addAppointment(primary.name, patientName, slot);
+          checkAndAddAppointment(primary.name, patientName, slot);
         });
       });
 
 
       // 3. then schedule the patient's remaining sessions using floats.
-      patients.forEach((patient) => {
+      state.patients.forEach((patient) => {
         while (patientNeedsMoreSessions(patient.name)) {
           const float = randomize(floats);
           const slot = randomize(overlappingAvailability(patient, float));
-          addAppointment(float.name, patient.name, slot);
+          checkAndAddAppointment(float.name, patient.name, slot);
         }
       });
 
@@ -157,20 +156,16 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
       // we'll ignore all edge cases at first. once this is working, I'll have Raul play with it and see if he can find any more.
       // then I'll decide how to handle them. 
 
-
-
-      // if i include some randomization, it may be useful for the user to be able to regenerate the schedule
-      // and see different options!
     };
 
-    const optimizeAppts = () => {
+    const optimizeAppts = () => { // hint for testing this - lengthen a parimary's day so that they have 9 or 10 slots
       // in the remaining availability (minus LC), optimize by:
       // - moving appointments earlier so that therapists can go home early if possible
       // - creating as much space between appointments as possible for patients. thankfully, the randomization does this pretty well!
       // - avoiding too many appointments with the same therapist (?)
       
       // 1. move therapists' empty slots as late as possible
-      const therapistsWithEmptySlots = therapists.filter((therapist) => !lcTherapists.includes(therapist) && appointments.filter((appt) => appt.therapist === therapist.name).length < 8);
+      const therapistsWithEmptySlots = state.therapists.filter((therapist) => !lcTherapists.includes(therapist) && appointments.filter((appt) => appt.therapist === therapist.name).length < 8);
       therapistsWithEmptySlots.forEach((therapist) => {
         const therapistAppts = appointments.filter((appt) => appt.therapist === therapist.name);
         const apptsLastToFirst: Appointment[] = JSON.parse(JSON.stringify(therapistAppts)).sort((a: Appointment, b: Appointment) => b.time.localeCompare(a.time));
@@ -182,7 +177,7 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
           const swapAppts = (slotToFill: ValidTime): boolean => { 
             console.log('slotToFill', slotToFill);
             console.log('apptsLastToFirst', apptsLastToFirst);
-            debugger
+            // debugger
             if (slotToFill === lastSlot) return true;
 
             for (let i = 1; i < apptsLastToFirst.length; i++) {
@@ -228,9 +223,9 @@ export const generateSchedule = (patients: Patient[], therapists: Therapist[]): 
     };
 
     scheduleSessions();
-    optimizeAppts();
+    // optimizeAppts();
 
 
   // ---------------
-  return [appointments, errorMessage];
+  return;
 };
