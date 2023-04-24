@@ -25,8 +25,11 @@ export const hasAvailable = (person: Person, slot: TimeRange): boolean => {
 };
 
 export const isLC = (person: Person, slot: TimeRange, state: State): boolean => {
-  if (slot.startTime === '1115') debugger
-  return (person.type !== 'patient' && Object.keys(state.lc).includes(person.name));
+  if (person.type === 'patient' || !Object.keys(state.lc).includes(person.name)) return false;
+  return state.lc[person.name].some((avb: TimeRange) => (
+    dayjs(slot.startTime, 'HHmm').isBetween(dayjs(avb.startTime, 'HHmm'), dayjs(avb.endTime, 'HHmm'), 'minute', '[]')
+      && dayjs(slot.endTime, 'HHmm').isBetween(dayjs(avb.startTime, 'HHmm'), dayjs(avb.endTime, 'HHmm'), 'minute', '[]')
+  ));
 };
 
 export const isBefore = (timeA: ValidTime, timeB: ValidTime) => {

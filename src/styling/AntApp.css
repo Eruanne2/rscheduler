@@ -1,0 +1,201 @@
+body {
+  background-color: #f0f2f5;
+  font-family: 'Raleway', sans-serif;
+}
+
+.app {
+  margin: 0 90px;
+}
+
+.main-header {
+  font-size: 30px;
+  text-align: center;
+  margin: 60px;
+}
+
+.main-container {
+  display: flex;
+  justify-content: space-between;
+  height: 75vh;
+  width: 100%;
+  margin-top: 30px;
+}
+
+.schedule, .list-container {
+  box-shadow: 0 8px 10px rgb(0 0 0 / 8%);
+  background-color: #fff;
+}
+
+.schedule {
+  width: 60%;
+  /* height: 740px; */
+}
+
+.schedule-header {
+  width: 100%;
+  padding: 15px;
+}
+
+.generate-schedule-btn {
+  box-shadow: 0 2px 0 rgb(0 0 0 / 2%);
+  color: rgba(0,0,0,.65);
+  border: 1px solid #d9d9d9;
+  background-color: #ecf4ff;
+  padding: 10px;
+}
+
+.schedule-controls {
+  display: flex; 
+  align-items: center;
+}
+
+.schedule-controls > * {
+  margin: 0 10px;
+}
+
+.schedule-controls label {
+  padding-top: 2px;
+}
+
+input[type=radio] {
+  margin: 0 4px 0 0;
+}
+
+.error {
+  margin: 10px 0 0 10px;
+  color: #b42d2d;
+  font-weight: bold;
+}
+
+.list-container {
+  width: 30%;
+  height: 100%;
+  font-size: 20px;
+}
+
+.list-container .glyphicon-plus {
+  padding: 10px;
+  color: #b7b7b7;
+  cursor: pointer;
+}
+
+.list-tabs {
+  display: flex;
+  margin: 8px 0 0 8px;
+}
+
+.tab {
+  padding: 5px 2px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border: 1px solid #d9d9d9;
+  border-bottom: none;
+}
+
+/* 
+.pt-list li:first-child {
+  border-top: 1px solid #d9d9d9;
+}
+
+.pt-list li {
+  border-bottom: 1px solid #d9d9d9;
+  padding: 10px;
+}
+
+.li-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.li-header .name-input {
+  width: 200px;
+}
+
+.li-header .star {
+  margin-left: 5px;
+  color: #b7b7b7;
+  font-size: 18px;
+  display: inline;
+}
+
+.hidden {
+  display: none;
+}
+
+.selected-li select {
+  margin-top: 15px;
+}
+
+.list-item-icons {
+  display: flex;
+  justify-content: flex-end;
+  color: #b7b7b7;
+}
+
+.list-item-icons span {
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.list-item-icons .glyphicon-menu-up, .list-item-icons .glyphicon-menu-down {
+  color: #333;
+}
+
+.time-select {
+  width: 100px;
+}
+
+.add-new-availability {
+  font-size: 16px;
+  font-style: italic;
+}
+
+/*
+.schedule table {
+  margin: 20px;
+  width: calc(100% - 40px);
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.schedule tbody {
+  position: relative;
+  height: 600px;
+}
+
+.schedule .last-time-label {
+  position: absolute;
+  left: 0;
+  bottom: 10px;
+}
+
+.schedule td:first-child, .schedule th:first-child {
+  width: 50px;
+}
+
+.schedule td:not(:first-child), .schedule th:not(:first-child) {
+  text-align: center;
+  width: auto;
+}
+
+.schedule td:first-child {
+  position: relative;
+}
+
+.schedule td:not(:first-child) {
+  vertical-align: middle;
+  border: 1px solid #d9d9d9;
+}
+
+.schedule .y-labels {
+  position: absolute;
+  top: -10px;
+}
+
+.schedule tr.block-off td:not(:first-child), .schedule td.block-off {
+  background-color: #b7b7b7;
+}
+
+.schedule tr.lc td:not(:first-child), .schedule td.lc {
+  background-color: #d27373;
+} */

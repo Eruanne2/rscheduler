@@ -1,8 +1,8 @@
 import { useReducer } from 'react';
-import Schedule from './components/Schedule'
+import Schedule from './antComponents/Schedule'
 import PatientTherapistList from './components/PatientTherapistList';
 import './styling/reset.css';
-import './styling/App.css';
+import './styling/AntApp.css';
 import { initState } from './state/initState';
 import { AppContext } from './state/context';
 import reducer from './state/reducer';
